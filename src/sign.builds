@@ -21,7 +21,7 @@
                           MarkerFile="%(WindowsNativeLocation.Identity).requires_signing" />
   </Target>
 
-  <!-- populates item group FilesToSign with the list of files to sign -->
+  <!-- populates item group SignMarkerFile with the list of files to sign -->
   <Target Name="GetFilesToSignItems"
           DependsOnTargets="GenerateSignForWindowsNative">
     <!-- read all of the marker files and populate the FilesToSign item group -->
@@ -33,6 +33,7 @@
       <Output TaskParameter="SigningMetadata" ItemName="FilesToSign" />
     </ReadSigningRequired>
     <Message Importance="High" Text="Attempting to sign %(FilesToSign.Identity) with authenticode='%(FilesToSign.Authenticode)' and strongname='%(FilesToSign.StrongName)'" />
+    <Message Importance="High" Text="Total: @(FilesToSign->Count()) files" />
   </Target>
 
   <Target Name="Build"
@@ -42,5 +43,27 @@
     <!-- now that the files have been signed delete the marker files -->
     <Delete Files="@(SignMarkerFile)" />
   </Target>
+  
+  <!-- populates item group NuPkgSignMarkerFile with the list of packages to sign -->
+  <Target Name="GetNuPkgsToSignItems">
+    <ItemGroup>
+      <!-- Note: this also looks for things under bin\obj which require signing like the shims -->
+      <NuPkgSignMarkerFile Include="$(OutDir)**\*.requires_nupkg_signing" />
+    </ItemGroup>
+    <ReadSigningRequired MarkerFiles="@(NuPkgSignMarkerFile)">
+      <Output TaskParameter="SigningMetadata" ItemName="FilesToSign" />
+    </ReadSigningRequired>
+    <Message Importance="High" Text="Attempting to sign %(FilesToSign.Identity) with authenticode='%(FilesToSign.Authenticode)'" />
+    <Message Importance="High" Text="Total: @(FilesToSign->Count()) files" />
+  </Target>  
+  
+  <Target Name="SignNuPkgs"
+          Condition="'$(SkipSigning)' != 'true' and '$(SignType)' != 'public'"
+          DependsOnTargets="BuildPackages;GetNuPkgsToSignItems">
+    <!-- Explicitly call the target as this was invoked already for assemblies -->
+    <CallTarget Targets="SignFiles"/>      
+    <!-- now that the files have been signed delete the marker files -->
+    <Delete Files="@(NuPkgSignMarkerFile)" />
+  </Target>  
 
 </Project>
