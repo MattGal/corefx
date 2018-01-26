@@ -536,11 +536,11 @@
   "quality": "definition",
   "drafts": [],
   "queue": {
-    "id": 36,
-    "name": "DotNet-Build",
+    "id": 163,
+    "name": "DotNetCore-Test",
     "pool": {
-      "id": 39,
-      "name": "DotNet-Build"
+      "id": 83,
+      "name": "DotNetCore-Test"
     }
   },
   "id": 5008,
